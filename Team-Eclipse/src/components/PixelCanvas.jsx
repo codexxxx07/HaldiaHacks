@@ -33,6 +33,7 @@ export default function PixelCanvas({
   brushSize,
   mirror,
   theme,
+  readOnly = false,
   onLive,
   onHistory,
   onPickColor,
@@ -157,6 +158,7 @@ export default function PixelCanvas({
   };
 
   const handlePointerDown = (event) => {
+    if (readOnly) return;
     if (event.pointerType === "mouse" && event.button !== 0) return;
     if (dragRef.current) return;
     const cell = cellFromEvent(event);
@@ -273,7 +275,9 @@ export default function PixelCanvas({
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerCancel}
         onDragStart={(event) => event.preventDefault()}
-        className="relative block cursor-crosshair touch-none select-none"
+        className={`relative block touch-none select-none ${
+          readOnly ? "cursor-default" : "cursor-crosshair"
+        }`}
         aria-label={`Pixel drawing canvas, ${size} by ${size}`}
         role="img"
       />

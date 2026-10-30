@@ -19,7 +19,7 @@ export default function Header({
         <img
           src="./src/assets/Black and White Circular Art & Design Logo (1).png"
           alt="SpriteLab logo"
-          className="h-6 w-6 shrink-0 rounded-full object-contain"
+          className="h-7 w-7 shrink-0 self-center rounded-full object-contain sm:h-8 sm:w-8"
         />
         <div className="min-w-0">
           <h1 className="truncate font-pixel text-[12px] tracking-[0.08em] text-slate-100 sm:text-[14px]">

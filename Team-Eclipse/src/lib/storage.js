@@ -38,21 +38,32 @@ export function loadSession() {
   if (!stored) return null;
   const decoded = decodeArt(stored.art);
   if (!decoded) return null;
+  const frames = Array.isArray(stored.frames)
+    ? stored.frames
+        .map((entry) => decodeArt(entry))
+        .filter((frame) => frame && frame.size === decoded.size)
+        .map((frame) => ({ pixels: frame.pixels }))
+    : [];
   return {
     name: cleanName(stored.name),
     size: decoded.size,
     pixels: decoded.pixels,
+    frames,
   };
 }
 
 /** Autosave the working canvas. Returns false if storage is unavailable. */
-export function saveSession({ name, size, pixels }) {
-  return writeValue(KEYS.session, {
+export function saveSession({ name, size, pixels, frames }) {
+  const payload = {
     name: cleanName(name),
     size,
     art: encodeArt(size, pixels),
     updatedAt: Date.now(),
-  }).ok;
+  };
+  if (Array.isArray(frames) && frames.length) {
+    payload.frames = frames.map((frame) => encodeArt(size, frame.pixels));
+  }
+  return writeValue(KEYS.session, payload).ok;
 }
 
 /** Returns the saved theme ("dark" | "light"), or null when unset. */

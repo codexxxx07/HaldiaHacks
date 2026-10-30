@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import CanvasStage from "./components/CanvasStage";
+import FramesPanel from "./components/FramesPanel";
 import GalleryPanel from "./components/GalleryPanel";
 import Header from "./components/Header";
+import ImportPanel from "./components/ImportPanel";
 import PalettePanel from "./components/PalettePanel";
 import SidePanel from "./components/SidePanel";
 import Toast from "./components/Toast";
@@ -112,14 +114,21 @@ async function copyToClipboard(text) {
 }
 
 export default function App() {
-  const [boot] = useState(
-    () =>
-      loadSession() ?? {
-        name: "Untitled",
-        size: DEFAULT_SIZE,
-        pixels: createArt(DEFAULT_SIZE),
-      },
-  );
+  const [boot] = useState(() => {
+    const saved = loadSession();
+    const size = saved?.size ?? DEFAULT_SIZE;
+    const frames =
+      saved?.frames?.length
+        ? saved.frames.map((frame) => ({ id: makeId(), pixels: frame.pixels }))
+        : [{ id: makeId(), pixels: saved?.pixels ?? createArt(DEFAULT_SIZE) }];
+    return {
+      name: saved?.name ?? "Untitled",
+      size,
+      frames,
+      activeFrameId: frames[0].id,
+      pixels: frames[0].pixels,
+    };
+  });
 
   const [doc, dispatch] = useReducer(documentReducer, {
     pixels: boot.pixels,
@@ -128,6 +137,11 @@ export default function App() {
   });
   const [size, setSize] = useState(boot.size);
   const [name, setName] = useState(boot.name);
+  const [frames, setFrames] = useState(boot.frames);
+  const [activeFrameId, setActiveFrameId] = useState(boot.activeFrameId);
+  const [playing, setPlaying] = useState(false);
+  const [fps, setFps] = useState(8);
+  const [playIndex, setPlayIndex] = useState(0);
   const [palette, setPalette] = useState(
     () => loadPalette() ?? DEFAULT_PALETTE.slice(),
   );
@@ -166,14 +180,38 @@ export default function App() {
   // Keep the working canvas safe across refreshes.
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      const ok = saveSession({ name, size, pixels: doc.pixels });
+      const ok = saveSession({ name, size, pixels: doc.pixels, frames });
       if (!ok && !storageWarned.current) {
         storageWarned.current = true;
         notify("Autosave is off — local storage is unavailable.", "warn");
       }
     }, 350);
     return () => window.clearTimeout(timer);
-  }, [name, size, doc.pixels, notify]);
+  }, [name, size, doc.pixels, frames, notify]);
+
+  // Mirror the live drawing back into the selected frame so thumbnails update.
+  useEffect(() => {
+    setFrames((current) => {
+      let changed = false;
+      const next = current.map((frame) => {
+        if (frame.id === activeFrameId && frame.pixels !== doc.pixels) {
+          changed = true;
+          return { ...frame, pixels: doc.pixels };
+        }
+        return frame;
+      });
+      return changed ? next : current;
+    });
+  }, [doc.pixels, activeFrameId]);
+
+  // Step through frames while the preview is playing.
+  useEffect(() => {
+    if (!playing || frames.length < 2) return undefined;
+    const interval = window.setInterval(() => {
+      setPlayIndex((index) => (index + 1) % frames.length);
+    }, Math.round(1000 / fps));
+    return () => window.clearInterval(interval);
+  }, [playing, fps, frames.length]);
 
   useEffect(() => {
     savePalette(palette);
@@ -200,6 +238,9 @@ export default function App() {
         return;
       }
       dispatch({ type: "reset", pixels: decoded.pixels });
+      const frame = { id: makeId(), pixels: decoded.pixels };
+      setFrames([frame]);
+      setActiveFrameId(frame.id);
       setSize(decoded.size);
       setZoom(fitZoom(decoded.size));
       notify("Shared artwork loaded.", "success");
@@ -219,6 +260,76 @@ export default function App() {
     (snapshot) => dispatch({ type: "push", snapshot }),
     [],
   );
+
+  /* ------------------------------- Animation ------------------------------- */
+
+  const selectFrame = (id) => {
+    if (id === activeFrameId) return;
+    const frame = frames.find((entry) => entry.id === id);
+    if (!frame) return;
+    setActiveFrameId(id);
+    dispatch({ type: "reset", pixels: frame.pixels });
+  };
+
+  const addFrame = () => {
+    const pixels = createArt(size);
+    const frame = { id: makeId(), pixels };
+    setFrames((current) => [...current, frame]);
+    setActiveFrameId(frame.id);
+    dispatch({ type: "reset", pixels });
+    notify(`Frame ${frames.length + 1} added.`, "info");
+  };
+
+  const duplicateFrame = () => {
+    const index = frames.findIndex((frame) => frame.id === activeFrameId);
+    if (index < 0) return;
+    const pixels = frames[index].pixels.slice();
+    const frame = { id: makeId(), pixels };
+    setFrames((current) => [
+      ...current.slice(0, index + 1),
+      frame,
+      ...current.slice(index + 1),
+    ]);
+    setActiveFrameId(frame.id);
+    dispatch({ type: "reset", pixels });
+    notify("Frame duplicated.", "success");
+  };
+
+  const deleteFrame = () => {
+    if (frames.length <= 1) {
+      notify("Keep at least one frame.", "warn");
+      return;
+    }
+    const index = frames.findIndex((frame) => frame.id === activeFrameId);
+    if (index < 0) return;
+    if (
+      countFilled(frames[index].pixels) > 0 &&
+      !window.confirm("Delete this frame?")
+    ) {
+      return;
+    }
+    const next = frames.filter((frame) => frame.id !== activeFrameId);
+    const fallback = next[Math.min(index, next.length - 1)];
+    setFrames(next);
+    setActiveFrameId(fallback.id);
+    dispatch({ type: "reset", pixels: fallback.pixels });
+    notify("Frame deleted.", "info");
+  };
+
+  const startPlayback = () => {
+    const index = frames.findIndex((frame) => frame.id === activeFrameId);
+    setPlayIndex(index < 0 ? 0 : index);
+    setPlaying(true);
+  };
+
+  const stopPlayback = () => setPlaying(false);
+
+  const handleApplyImport = (pixels) => {
+    if (!pixels) return;
+    dispatch({ type: "push", snapshot: doc.pixels });
+    dispatch({ type: "live", pixels });
+    notify("Pixelated image applied to the canvas.", "success");
+  };
 
   // Keyboard shortcuts for tools, history and zoom.
   useEffect(() => {
@@ -317,12 +428,16 @@ export default function App() {
   const handleSizeChange = (nextSize) => {
     if (nextSize === size) return;
     if (
-      countFilled(doc.pixels) > 0 &&
-      !window.confirm(`Switch to a ${nextSize}×${nextSize} canvas? This clears the current artwork.`)
+      frames.some((frame) => countFilled(frame.pixels) > 0) &&
+      !window.confirm(`Switch to a ${nextSize}×${nextSize} canvas? This clears all frames.`)
     ) {
       return;
     }
-    dispatch({ type: "reset", pixels: createArt(nextSize) });
+    const pixels = createArt(nextSize);
+    const frame = { id: makeId(), pixels };
+    setFrames([frame]);
+    setActiveFrameId(frame.id);
+    dispatch({ type: "reset", pixels });
     setSize(nextSize);
     setZoom(fitZoom(nextSize));
     notify(`Canvas set to ${nextSize} × ${nextSize}.`, "info");
@@ -368,6 +483,9 @@ export default function App() {
       return;
     }
     dispatch({ type: "reset", pixels: decoded.pixels });
+    const frame = { id: makeId(), pixels: decoded.pixels };
+    setFrames([frame]);
+    setActiveFrameId(frame.id);
     setSize(decoded.size);
     setName(item.name);
     setZoom(fitZoom(decoded.size));
@@ -426,6 +544,9 @@ export default function App() {
     else notify("Share link is ready in the address bar.", "info");
   };
 
+  const previewFrame = playing && frames.length ? frames[playIndex % frames.length] : null;
+  const canvasPixels = previewFrame ? previewFrame.pixels : doc.pixels;
+
   return (
     <div className="flex min-h-screen flex-col lg:h-screen lg:overflow-hidden">
       <Header
@@ -460,18 +581,34 @@ export default function App() {
               onAdd={handleAddColor}
               onRemove={handleRemoveColor}
             />
+            <FramesPanel
+              frames={frames}
+              activeFrameId={activeFrameId}
+              playing={playing}
+              playIndex={playIndex}
+              fps={fps}
+              size={size}
+              onAdd={addFrame}
+              onDuplicate={duplicateFrame}
+              onDelete={deleteFrame}
+              onSelect={selectFrame}
+              onPlay={startPlayback}
+              onPause={stopPlayback}
+              onFpsChange={setFps}
+            />
           </div>
 
           <div className="order-1 min-w-0 lg:order-2 lg:min-h-0">
             <CanvasStage
               size={size}
-              pixels={doc.pixels}
+              pixels={canvasPixels}
               zoom={zoom}
               tool={tool}
               color={color}
               brushSize={brushSizes[tool] ?? DEFAULT_BRUSH_SIZE}
               mirror={mirror}
               theme={theme}
+              readOnly={playing}
               onLive={handleLive}
               onHistory={handleHistory}
               onPickColor={handlePickColor}
@@ -490,6 +627,7 @@ export default function App() {
               exporting={exporting}
               pixelCount={countFilled(doc.pixels)}
             />
+            <ImportPanel size={size} onApply={handleApplyImport} onNotify={notify} />
             <GalleryPanel
               gallery={gallery}
               name={name}

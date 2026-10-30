@@ -11,6 +11,7 @@ export default function CanvasStage({
   brushSize,
   mirror,
   theme,
+  readOnly = false,
   onLive,
   onHistory,
   onPickColor,
@@ -50,6 +51,7 @@ export default function CanvasStage({
             brushSize={brushSize}
             mirror={mirror}
             theme={theme}
+            readOnly={readOnly}
             onLive={onLive}
             onHistory={onHistory}
             onPickColor={onPickColor}
@@ -59,11 +61,21 @@ export default function CanvasStage({
 
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-line bg-panel px-3 py-2">
         <p className="min-w-0 truncate text-[10px] text-slate-500">
-          <span className="font-pixel text-[8px] tracking-[0.1em] text-slate-300">
-            {active.label}
-          </span>
-          <span className="mx-1.5 text-line-2">/</span>
-          {active.hint}
+          {readOnly ? (
+            <>
+              <span className="font-pixel text-[8px] tracking-[0.1em] text-cyan">Preview</span>
+              <span className="mx-1.5 text-line-2">/</span>
+              Playing animation — pause to edit
+            </>
+          ) : (
+            <>
+              <span className="font-pixel text-[8px] tracking-[0.1em] text-slate-300">
+                {active.label}
+              </span>
+              <span className="mx-1.5 text-line-2">/</span>
+              {active.hint}
+            </>
+          )}
         </p>
 
         <div className="flex items-center gap-1">

@@ -279,6 +279,71 @@ export async function decodeShare(token) {
   }
 }
 
+/* ------------------------------ Image import ------------------------------ */
+
+function rgbToHex(r, g, b) {
+  const value = (1 << 24) | (r << 16) | (g << 8) | b;
+  return `#${value.toString(16).slice(1)}`;
+}
+
+/**
+ * Convert a loaded image into a size×size pixel-art grid. The image is scaled
+ * to fit while keeping its aspect ratio (letterboxed with transparency) and
+ * sampled in `block`-sized chunks so callers can trade detail for a chunkier
+ * look. Runs entirely in the browser — nothing is uploaded anywhere.
+ */
+export function pixelateImage(image, size, block = 4) {
+  const width = image?.naturalWidth || image?.width || 0;
+  const height = image?.naturalHeight || image?.height || 0;
+  if (!width || !height) return null;
+
+  const span = Math.max(1, Math.floor(block));
+  const scale = Math.min(size / width, size / height);
+  const drawW = Math.max(1, Math.round(width * scale));
+  const drawH = Math.max(1, Math.round(height * scale));
+  const offsetX = Math.floor((size - drawW) / 2);
+  const offsetY = Math.floor((size - drawH) / 2);
+
+  const sampleW = Math.max(1, Math.round(drawW / span));
+  const sampleH = Math.max(1, Math.round(drawH / span));
+
+  const sampler = document.createElement("canvas");
+  sampler.width = sampleW;
+  sampler.height = sampleH;
+  const samplerCtx = sampler.getContext("2d");
+  if (!samplerCtx) return null;
+  samplerCtx.imageSmoothingEnabled = true;
+  samplerCtx.imageSmoothingQuality = "high";
+  samplerCtx.drawImage(image, 0, 0, sampleW, sampleH);
+
+  let data;
+  try {
+    data = samplerCtx.getImageData(0, 0, sampleW, sampleH).data;
+  } catch {
+    return null;
+  }
+
+  const pixels = createArt(size);
+  for (let y = 0; y < drawH; y += 1) {
+    const gridY = offsetY + y;
+    if (gridY < 0 || gridY >= size) continue;
+    const sampleY = Math.min(sampleH - 1, Math.floor((y * sampleH) / drawH));
+    for (let x = 0; x < drawW; x += 1) {
+      const gridX = offsetX + x;
+      if (gridX < 0 || gridX >= size) continue;
+      const sampleX = Math.min(sampleW - 1, Math.floor((x * sampleW) / drawW));
+      const offset = (sampleY * sampleW + sampleX) * 4;
+      if (data[offset + 3] < 8) continue;
+      pixels[gridY * size + gridX] = rgbToHex(
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+      );
+    }
+  }
+  return pixels;
+}
+
 function safeFileName(name) {
   const base = String(name || "")
     .trim()

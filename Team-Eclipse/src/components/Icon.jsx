@@ -84,6 +84,26 @@ const PATHS = {
       <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
     </>
   ),
+  play: <path d="M7 5l12 7-12 7V5Z" />,
+  pause: (
+    <>
+      <path d="M9 5v14" />
+      <path d="M15 5v14" />
+    </>
+  ),
+  copy: (
+    <>
+      <rect x="9" y="9" width="11" height="11" />
+      <path d="M5 15V4h11" />
+    </>
+  ),
+  upload: (
+    <>
+      <path d="M12 18V7" />
+      <path d="m8 11 4-4 4 4" />
+      <path d="M5 20h14" />
+    </>
+  ),
   x: <path d="m6 6 12 12M18 6 6 18" />,
   check: <path d="m5 13 4 4L19 7" />,
   grid: (
