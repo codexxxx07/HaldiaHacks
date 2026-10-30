@@ -80,19 +80,37 @@ export function rectPoints(x0, y0, x1, y1) {
   return points;
 }
 
+/** Reflect cells across the vertical centre axis (x → size - 1 - x). */
+export function mirrorPoints(cells, size) {
+  const mirrored = new Array(cells.length);
+  for (let i = 0; i < cells.length; i += 1) {
+    const cell = cells[i];
+    mirrored[i] = [size - 1 - cell[0], cell[1]];
+  }
+  return mirrored;
+}
+
 /**
  * Paint cells onto a copy of the artwork. Returns null when nothing changed,
  * which keeps no-op strokes out of the undo history.
  */
-export function paintCells(base, size, cells, color) {
+export function paintCells(base, size, cells, color, brushSize = 1) {
   let next = base;
+  const span = Math.max(1, Math.floor(brushSize));
+  const offset = Math.floor((span - 1) / 2);
   for (let i = 0; i < cells.length; i += 1) {
     const [x, y] = cells[i];
-    if (x < 0 || y < 0 || x >= size || y >= size) continue;
-    const index = y * size + x;
-    if (next[index] === color) continue;
-    if (next === base) next = base.slice();
-    next[index] = color;
+    for (let dy = 0; dy < span; dy += 1) {
+      for (let dx = 0; dx < span; dx += 1) {
+        const px = x - offset + dx;
+        const py = y - offset + dy;
+        if (px < 0 || py < 0 || px >= size || py >= size) continue;
+        const index = py * size + px;
+        if (next[index] === color) continue;
+        if (next === base) next = base.slice();
+        next[index] = color;
+      }
+    }
   }
   return next === base ? null : next;
 }
@@ -186,6 +204,79 @@ export function decodeArt(art) {
   }
 
   return null;
+}
+
+/* ------------------------------- Share links ------------------------------ */
+/* Artwork is serialised with encodeArt, optionally gzip-compressed, then
+ * base64url-encoded so it fits safely inside a URL hash. */
+
+function bytesToBase64Url(bytes) {
+  let binary = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function base64UrlToBytes(value) {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+async function gzipBytes(text) {
+  if (typeof CompressionStream !== "function") return null;
+  try {
+    const stream = new Blob([text]).stream().pipeThrough(new CompressionStream("gzip"));
+    const buffer = await new Response(stream).arrayBuffer();
+    return new Uint8Array(buffer);
+  } catch {
+    return null;
+  }
+}
+
+async function gunzipText(bytes) {
+  if (typeof DecompressionStream !== "function") return null;
+  try {
+    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
+    return await new Response(stream).text();
+  } catch {
+    return null;
+  }
+}
+
+/** Encode artwork into a compact, URL-safe token for sharing. */
+export async function encodeShare(size, pixels) {
+  const json = JSON.stringify(encodeArt(size, pixels));
+  const packed = await gzipBytes(json);
+  if (packed) return `g${bytesToBase64Url(packed)}`;
+  return `j${bytesToBase64Url(new TextEncoder().encode(json))}`;
+}
+
+/** Decode a share token back into artwork. Returns null for invalid data. */
+export async function decodeShare(token) {
+  if (typeof token !== "string" || token.length < 2) return null;
+  const kind = token[0];
+  if (kind !== "g" && kind !== "j") return null;
+
+  let bytes;
+  try {
+    bytes = base64UrlToBytes(token.slice(1));
+  } catch {
+    return null;
+  }
+
+  try {
+    const json = kind === "g" ? await gunzipText(bytes) : new TextDecoder().decode(bytes);
+    if (!json) return null;
+    return decodeArt(JSON.parse(json));
+  } catch {
+    return null;
+  }
 }
 
 function safeFileName(name) {

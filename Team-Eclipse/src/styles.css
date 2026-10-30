@@ -178,6 +178,52 @@
     @apply inline-flex items-center gap-1.5 border border-line bg-ink/60 px-2 py-1 font-pixel text-[7px] uppercase tracking-[0.14em] text-slate-500;
   }
 
+  .brush-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 18px;
+    background: transparent;
+    cursor: pointer;
+    touch-action: none;
+  }
+
+  .brush-slider::-webkit-slider-runnable-track {
+    height: 10px;
+    border: 1px solid #35415e;
+    background: #0b0f19;
+  }
+
+  .brush-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 18px;
+    margin-top: -4px;
+    border: 1px solid #67f5b1;
+    border-radius: 0;
+    background: #67f5b1;
+    box-shadow: 2px 2px 0 0 #000000;
+  }
+
+  .brush-slider:active::-webkit-slider-thumb {
+    background: #8affc9;
+  }
+
+  .brush-slider::-moz-range-track {
+    height: 10px;
+    border: 1px solid #35415e;
+    background: #0b0f19;
+  }
+
+  .brush-slider::-moz-range-thumb {
+    width: 12px;
+    height: 18px;
+    border: 1px solid #67f5b1;
+    border-radius: 0;
+    background: #67f5b1;
+    box-shadow: 2px 2px 0 0 #000000;
+  }
+
   .checker {
     background-color: #0d1220;
     background-image:

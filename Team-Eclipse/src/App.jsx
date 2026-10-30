@@ -7,6 +7,7 @@ import SidePanel from "./components/SidePanel";
 import Toast from "./components/Toast";
 import ToolPanel from "./components/ToolPanel";
 import {
+  DEFAULT_BRUSH_SIZE,
   DEFAULT_PALETTE,
   DEFAULT_SIZE,
   MAX_GALLERY,
@@ -21,8 +22,10 @@ import {
   countFilled,
   createArt,
   decodeArt,
+  decodeShare,
   downloadPng,
   encodeArt,
+  encodeShare,
   normalizeHex,
 } from "./lib/art";
 import {
@@ -77,6 +80,35 @@ function makeId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+const SHARE_HASH_KEY = "art";
+
+/** Copy text to the clipboard, falling back to a hidden textarea. */
+async function copyToClipboard(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // Fall through to the legacy path below.
+  }
+  try {
+    const area = document.createElement("textarea");
+    area.value = text;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.top = "-1000px";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.select();
+    const ok = document.execCommand("copy");
+    area.remove();
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
 export default function App() {
   const [boot] = useState(
     () =>
@@ -102,6 +134,11 @@ export default function App() {
   );
   const [gallery, setGallery] = useState(() => loadGallery());
   const [tool, setTool] = useState("pencil");
+  const [mirror, setMirror] = useState(false);
+  const [brushSizes, setBrushSizes] = useState({
+    pencil: DEFAULT_BRUSH_SIZE,
+    eraser: DEFAULT_BRUSH_SIZE,
+  });
   const [zoom, setZoom] = useState(() => fitZoom(boot.size));
   const [exportScale, setExportScale] = useState(8);
   const [exporting, setExporting] = useState(false);
@@ -138,6 +175,30 @@ export default function App() {
   useEffect(() => {
     savePalette(palette);
   }, [palette]);
+
+  // Restore artwork shared through the URL hash when the app opens.
+  useEffect(() => {
+    const hash = window.location.hash.replace(/^#/, "");
+    if (!hash) return;
+    const token = new URLSearchParams(hash).get(SHARE_HASH_KEY);
+    if (!token) return;
+
+    let cancelled = false;
+    decodeShare(token).then((decoded) => {
+      if (cancelled) return;
+      if (!decoded) {
+        notify("That share link is invalid or corrupted.", "error");
+        return;
+      }
+      dispatch({ type: "reset", pixels: decoded.pixels });
+      setSize(decoded.size);
+      setZoom(fitZoom(decoded.size));
+      notify("Shared artwork loaded.", "success");
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [notify]);
 
   const undo = useCallback(() => dispatch({ type: "undo" }), []);
   const redo = useCallback(() => dispatch({ type: "redo" }), []);
@@ -239,6 +300,11 @@ export default function App() {
     else notify("That pixel is transparent.", "warn");
   };
 
+  // Pencil and eraser keep independent brush sizes (default 1px).
+  const handleBrushSizeChange = (nextSize) => {
+    setBrushSizes((current) => ({ ...current, [tool]: nextSize }));
+  };
+
   const handleSizeChange = (nextSize) => {
     if (nextSize === size) return;
     if (
@@ -327,6 +393,30 @@ export default function App() {
     else notify("Could not export the PNG. Try again.", "error");
   };
 
+  const handleShare = async () => {
+    if (countFilled(doc.pixels) === 0) {
+      notify("Canvas is empty — draw something before sharing.", "warn");
+      return;
+    }
+    let token;
+    try {
+      token = await encodeShare(size, doc.pixels);
+    } catch {
+      notify("Could not create a share link.", "error");
+      return;
+    }
+    const base = window.location.href.split("#")[0];
+    const url = `${base}#${SHARE_HASH_KEY}=${token}`;
+    try {
+      window.history.replaceState(null, "", `#${SHARE_HASH_KEY}=${token}`);
+    } catch {
+      // Some contexts block history updates; the link itself still works.
+    }
+    const copied = await copyToClipboard(url);
+    if (copied) notify("Share link copied to clipboard.", "success");
+    else notify("Share link is ready in the address bar.", "info");
+  };
+
   return (
     <div className="flex min-h-screen flex-col lg:h-screen lg:overflow-hidden">
       <Header
@@ -336,6 +426,7 @@ export default function App() {
         onUndo={undo}
         onRedo={redo}
         onSave={handleSave}
+        onShare={handleShare}
         onExport={handleExport}
         exporting={exporting}
       />
@@ -343,7 +434,14 @@ export default function App() {
       <main className="min-h-0 flex-1 px-3 py-3 sm:px-4 lg:px-5 lg:py-4">
         <div className="grid min-h-0 gap-3 lg:h-full lg:grid-cols-[236px_minmax(0,1fr)_300px]">
           <div className="order-2 flex min-w-0 flex-col gap-3 lg:order-1 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
-            <ToolPanel tool={tool} onToolChange={setTool} />
+            <ToolPanel
+              tool={tool}
+              onToolChange={setTool}
+              brushSize={brushSizes[tool] ?? DEFAULT_BRUSH_SIZE}
+              onBrushSizeChange={handleBrushSizeChange}
+              mirror={mirror}
+              onMirrorToggle={() => setMirror((value) => !value)}
+            />
             <PalettePanel
               color={color}
               palette={palette}
@@ -360,6 +458,8 @@ export default function App() {
               zoom={zoom}
               tool={tool}
               color={color}
+              brushSize={brushSizes[tool] ?? DEFAULT_BRUSH_SIZE}
+              mirror={mirror}
               onLive={handleLive}
               onHistory={handleHistory}
               onPickColor={handlePickColor}

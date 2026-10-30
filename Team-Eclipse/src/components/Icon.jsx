@@ -52,6 +52,22 @@ const PATHS = {
       <path d="M5 20h14" />
     </>
   ),
+  share: (
+    <>
+      <circle cx="6" cy="12" r="2.5" />
+      <circle cx="18" cy="6" r="2.5" />
+      <circle cx="18" cy="18" r="2.5" />
+      <path d="m8.2 10.8 7.6-3.6" />
+      <path d="m8.2 13.2 7.6 3.6" />
+    </>
+  ),
+  mirror: (
+    <>
+      <path d="M12 3v18" />
+      <path d="M8 7 4 12l4 5V7Z" />
+      <path d="m16 7 4 5-4 5V7Z" />
+    </>
+  ),
   trash: (
     <>
       <path d="M4 7h16" />

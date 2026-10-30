@@ -1,8 +1,16 @@
-import { TOOLS } from "../constants";
+import { BRUSH_SIZE_MAX, BRUSH_SIZE_MIN, TOOLS } from "../constants";
 import Icon from "./Icon";
 
-export default function ToolPanel({ tool, onToolChange }) {
+export default function ToolPanel({
+  tool,
+  onToolChange,
+  brushSize,
+  onBrushSizeChange,
+  mirror,
+  onMirrorToggle,
+}) {
   const active = TOOLS.find((item) => item.id === tool) ?? TOOLS[0];
+  const showBrush = tool === "pencil" || tool === "eraser";
 
   return (
     <section className="panel">
@@ -41,6 +49,52 @@ export default function ToolPanel({ tool, onToolChange }) {
             </button>
           );
         })}
+      </div>
+
+      {showBrush && (
+        <div className="border-t border-line px-3 py-2.5">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <span className="font-pixel text-[7px] uppercase tracking-[0.14em] text-slate-500">
+              Size
+            </span>
+            <span className="chip text-mint/80">{brushSize}px</span>
+          </div>
+          <input
+            type="range"
+            min={BRUSH_SIZE_MIN}
+            max={BRUSH_SIZE_MAX}
+            step={1}
+            value={brushSize}
+            onChange={(event) => onBrushSizeChange(Number(event.target.value))}
+            aria-label={`${active.label} size`}
+            className="brush-slider w-full"
+          />
+        </div>
+      )}
+
+      <div className="border-t border-line px-3 py-2.5">
+        <button
+          type="button"
+          onClick={onMirrorToggle}
+          aria-pressed={mirror}
+          title="Mirror pencil strokes across the vertical centre"
+          className={`flex w-full cursor-pointer items-center justify-between gap-2 border px-2.5 py-2 transition-all duration-100 ${
+            mirror
+              ? "border-mint bg-mint/10 text-mint shadow-[inset_0_0_0_1px_rgba(103,245,177,0.22)]"
+              : "border-line bg-panel-2/60 text-slate-400 hover:border-line-2 hover:bg-panel-2 hover:text-slate-100"
+          }`}
+        >
+          <span className="flex items-center gap-2">
+            <Icon name="mirror" className="h-4 w-4" />
+            <span className="font-pixel text-[7px] uppercase tracking-[0.12em]">Mirror</span>
+          </span>
+          <span className={`font-pixel text-[7px] ${mirror ? "text-mint" : "text-slate-600"}`}>
+            {mirror ? "ON" : "OFF"}
+          </span>
+        </button>
+        <p className="mt-1.5 text-[10px] leading-relaxed text-slate-500">
+          Mirrors pencil strokes across the vertical centre.
+        </p>
       </div>
 
       <div className="border-t border-line px-3 py-2">

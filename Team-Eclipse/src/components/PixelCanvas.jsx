@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { floodFillPixels, linePoints, paintCells, rectPoints } from "../lib/art";
+import { floodFillPixels, linePoints, mirrorPoints, paintCells, rectPoints } from "../lib/art";
 
 const CHECKER_A = "#0d1220";
 const CHECKER_B = "#141a29";
@@ -28,6 +28,8 @@ export default function PixelCanvas({
   zoom,
   tool,
   color,
+  brushSize,
+  mirror,
   onLive,
   onHistory,
   onPickColor,
@@ -138,12 +140,9 @@ export default function PixelCanvas({
   const paintStroke = (from, to) => {
     const drag = dragRef.current;
     if (!drag || drag.mode !== "paint") return;
-    const next = paintCells(
-      drag.working,
-      size,
-      linePoints(from.x, from.y, to.x, to.y),
-      drag.brush,
-    );
+    const points = linePoints(from.x, from.y, to.x, to.y);
+    const cells = drag.mirror ? points.concat(mirrorPoints(points, size)) : points;
+    const next = paintCells(drag.working, size, cells, drag.brush, drag.brushSize);
     if (!next) return;
     drag.working = next;
     if (!drag.changed) {
@@ -203,6 +202,8 @@ export default function PixelCanvas({
       last: cell,
       changed: false,
       brush: tool === "eraser" ? null : color,
+      brushSize,
+      mirror: Boolean(mirror) && tool === "pencil",
       pointerId: event.pointerId,
     };
     paintStroke(cell, cell);

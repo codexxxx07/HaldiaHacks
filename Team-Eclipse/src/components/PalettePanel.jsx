@@ -40,6 +40,30 @@ function HexInput({ value, onCommit }) {
   );
 }
 
+const WHEEL_CENTER = 50;
+const WHEEL_RADIUS = 50;
+
+function polarPoint(angle, radius) {
+  const rad = ((angle - 90) * Math.PI) / 180;
+  return `${WHEEL_CENTER + radius * Math.cos(rad)}% ${WHEEL_CENTER + radius * Math.sin(rad)}%`;
+}
+
+/** Build a pie-slice (or ring-slice) polygon so each colour becomes a wedge of the wheel. */
+function sectorClip(startAngle, endAngle, radius = WHEEL_RADIUS, innerRadius = 0) {
+  const steps = Math.max(2, Math.ceil((endAngle - startAngle) / 4));
+  const points = [];
+  if (innerRadius <= 0) points.push(`${WHEEL_CENTER}% ${WHEEL_CENTER}%`);
+  for (let i = 0; i <= steps; i += 1) {
+    points.push(polarPoint(startAngle + ((endAngle - startAngle) * i) / steps, radius));
+  }
+  if (innerRadius > 0) {
+    for (let i = steps; i >= 0; i -= 1) {
+      points.push(polarPoint(startAngle + ((endAngle - startAngle) * i) / steps, innerRadius));
+    }
+  }
+  return `polygon(${points.join(", ")})`;
+}
+
 export default function PalettePanel({
   color,
   palette,
@@ -48,6 +72,7 @@ export default function PalettePanel({
   onRemove,
 }) {
   const selectedIndex = palette.indexOf(color);
+  const segment = palette.length > 0 ? 360 / palette.length : 360;
 
   return (
     <section className="panel">
@@ -89,26 +114,43 @@ export default function PalettePanel({
           </div>
         </div>
 
-        <div className="grid grid-cols-8 gap-1.5" role="group" aria-label="Colour palette">
-          {palette.map((hex, index) => {
-            const selected = hex === color;
-            return (
-              <button
-                key={`${hex}-${index}`}
-                type="button"
-                onClick={() => onColorChange(hex)}
-                aria-label={`Select colour ${hex}`}
-                aria-pressed={selected}
-                title={hex}
-                className={`aspect-square w-full cursor-pointer border transition-transform duration-100 hover:-translate-y-0.5 ${
-                  selected
-                    ? "border-white ring-2 ring-mint ring-offset-2 ring-offset-panel"
-                    : "border-black/60 hover:border-line-2"
-                }`}
-                style={{ backgroundColor: hex }}
+        <div
+          className="relative mx-auto aspect-square w-full max-w-[230px]"
+          role="group"
+          aria-label="Colour palette"
+        >
+          <div className="absolute inset-0 overflow-hidden rounded-full border-2 border-line-2 shadow-[3px_3px_0_#000]">
+            {palette.map((hex, index) => {
+              const start = index * segment;
+              const selected = hex === color;
+              return (
+                <button
+                  key={`${hex}-${index}`}
+                  type="button"
+                  onClick={() => onColorChange(hex)}
+                  aria-label={`Select colour ${hex}`}
+                  aria-pressed={selected}
+                  title={hex}
+                  className="absolute inset-0 cursor-pointer transition-[filter] duration-100 hover:brightness-110"
+                  style={{ backgroundColor: hex, clipPath: sectorClip(start, start + segment) }}
+                />
+              );
+            })}
+            {selectedIndex >= 0 && (
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 bg-white/70"
+                style={{
+                  clipPath: sectorClip(
+                    selectedIndex * segment,
+                    selectedIndex * segment + segment,
+                    WHEEL_RADIUS - 1,
+                    WHEEL_RADIUS - 7,
+                  ),
+                }}
               />
-            );
-          })}
+            )}
+          </div>
         </div>
 
         <div className="flex gap-1.5">

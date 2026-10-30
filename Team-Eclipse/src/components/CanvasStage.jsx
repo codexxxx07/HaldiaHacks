@@ -8,6 +8,8 @@ export default function CanvasStage({
   zoom,
   tool,
   color,
+  brushSize,
+  mirror,
   onLive,
   onHistory,
   onPickColor,
@@ -38,6 +40,8 @@ export default function CanvasStage({
             zoom={zoom}
             tool={tool}
             color={color}
+            brushSize={brushSize}
+            mirror={mirror}
             onLive={onLive}
             onHistory={onHistory}
             onPickColor={onPickColor}

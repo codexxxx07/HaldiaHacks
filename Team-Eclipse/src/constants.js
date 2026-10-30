@@ -45,6 +45,9 @@ export const MAX_GALLERY = 40;
 export const ZOOM_MIN = 2;
 export const ZOOM_MAX = 32;
 export const DEFAULT_SIZE = 32;
+export const DEFAULT_BRUSH_SIZE = 1;
+export const BRUSH_SIZE_MIN = 1;
+export const BRUSH_SIZE_MAX = 16;
 
 /** Pick a zoom level that makes the board fit comfortably on this screen. */
 export function fitZoom(size) {

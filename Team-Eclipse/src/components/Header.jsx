@@ -7,6 +7,7 @@ export default function Header({
   onUndo,
   onRedo,
   onSave,
+  onShare,
   onExport,
   exporting,
 }) {
@@ -69,6 +70,15 @@ export default function Header({
         <button type="button" className="btn" onClick={onSave} title="Save artwork to gallery">
           <Icon name="save" className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">Save</span>
+        </button>
+        <button
+          type="button"
+          className="btn"
+          onClick={onShare}
+          title="Copy a shareable link to this artwork"
+        >
+          <Icon name="share" className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Share</span>
         </button>
         <button
           type="button"
