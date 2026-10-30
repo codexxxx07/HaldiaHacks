@@ -16,15 +16,14 @@ export default function Header({
   return (
     <header className="relative z-30 flex shrink-0 flex-wrap items-center gap-3 border-b border-line bg-deep/90 px-3 py-3 backdrop-blur sm:px-5">
       <div className="flex min-w-0 items-center gap-3">
-        <div className="grid shrink-0 grid-cols-2 gap-1" aria-hidden="true">
-          <span className="h-2.5 w-2.5 bg-mint shadow-[2px_2px_0_#000]" />
-          <span className="h-2.5 w-2.5 bg-cyan shadow-[2px_2px_0_#000]" />
-          <span className="h-2.5 w-2.5 bg-amber shadow-[2px_2px_0_#000]" />
-          <span className="h-2.5 w-2.5 bg-rose shadow-[2px_2px_0_#000]" />
-        </div>
+        <img
+          src="./src/assets/Black and White Circular Art & Design Logo (1).png"
+          alt="SpriteLab logo"
+          className="h-6 w-6 shrink-0 rounded-full object-contain"
+        />
         <div className="min-w-0">
           <h1 className="truncate font-pixel text-[12px] tracking-[0.08em] text-slate-100 sm:text-[14px]">
-            PIXEL<span className="text-mint">FORGE</span>
+            Sprite<span className="text-mint">Lab</span>
           </h1>
           <p className="mt-1.5 font-pixel text-[6px] uppercase tracking-[0.24em] text-slate-500 sm:text-[7px]">
             Retro pixel studio

@@ -1,4 +1,4 @@
-export const APP_NAME = "PixelForge";
+export const APP_NAME = "SpriteLab";
 
 export const DEFAULT_PALETTE = [
   "#0b0f19",
