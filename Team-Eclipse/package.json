@@ -1,0 +1,9 @@
+{
+  "name": "team-eclipse",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pixel Art Editor - Hack Day Haldia x GRID community starter",
+  "scripts": {
+    "start": "npx --yes serve ."
+  }
+}
