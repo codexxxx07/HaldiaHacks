@@ -32,9 +32,11 @@ import {
   loadGallery,
   loadPalette,
   loadSession,
+  loadTheme,
   saveGallery,
   savePalette,
   saveSession,
+  saveTheme,
 } from "./lib/storage";
 
 function documentReducer(state, action) {
@@ -143,6 +145,7 @@ export default function App() {
   const [exportScale, setExportScale] = useState(8);
   const [exporting, setExporting] = useState(false);
   const [notice, setNotice] = useState(null);
+  const [theme, setTheme] = useState(() => loadTheme() ?? "dark");
 
   const noticeTimer = useRef(null);
   const storageWarned = useRef(false);
@@ -175,6 +178,12 @@ export default function App() {
   useEffect(() => {
     savePalette(palette);
   }, [palette]);
+
+  // Reflect the selected theme on <html> and remember it for next visit.
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    saveTheme(theme);
+  }, [theme]);
 
   // Restore artwork shared through the URL hash when the app opens.
   useEffect(() => {
@@ -429,6 +438,8 @@ export default function App() {
         onShare={handleShare}
         onExport={handleExport}
         exporting={exporting}
+        theme={theme}
+        onToggleTheme={() => setTheme((value) => (value === "dark" ? "light" : "dark"))}
       />
 
       <main className="min-h-0 flex-1 px-3 py-3 sm:px-4 lg:px-5 lg:py-4">
@@ -460,6 +471,7 @@ export default function App() {
               color={color}
               brushSize={brushSizes[tool] ?? DEFAULT_BRUSH_SIZE}
               mirror={mirror}
+              theme={theme}
               onLive={handleLive}
               onHistory={handleHistory}
               onPickColor={handlePickColor}

@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { floodFillPixels, linePoints, mirrorPoints, paintCells, rectPoints } from "../lib/art";
 
-const CHECKER_A = "#0d1220";
-const CHECKER_B = "#141a29";
+const CHECKER = {
+  dark: { a: "#0d1220", b: "#141a29", grid: "rgba(148, 163, 184, 0.14)", major: "rgba(103, 245, 177, 0.2)" },
+  light: { a: "#e7ecf4", b: "#f6f9fd", grid: "rgba(71, 85, 105, 0.18)", major: "rgba(14, 143, 99, 0.3)" },
+};
 
 function setupCanvas(canvas, size, zoom) {
   const display = size * zoom;
@@ -30,6 +32,7 @@ export default function PixelCanvas({
   color,
   brushSize,
   mirror,
+  theme,
   onLive,
   onHistory,
   onPickColor,
@@ -46,10 +49,11 @@ export default function PixelCanvas({
     const prepared = setupCanvas(canvas, size, zoom);
     if (!prepared) return;
     const { ctx, display } = prepared;
+    const shades = CHECKER[theme] ?? CHECKER.dark;
 
     for (let y = 0; y < size; y += 1) {
       for (let x = 0; x < size; x += 1) {
-        ctx.fillStyle = (x + y) % 2 === 0 ? CHECKER_A : CHECKER_B;
+        ctx.fillStyle = (x + y) % 2 === 0 ? shades.a : shades.b;
         ctx.fillRect(x * zoom, y * zoom, zoom, zoom);
       }
     }
@@ -72,7 +76,7 @@ export default function PixelCanvas({
         ctx.moveTo(0, point);
         ctx.lineTo(display, point);
       }
-      ctx.strokeStyle = "rgba(148, 163, 184, 0.14)";
+      ctx.strokeStyle = shades.grid;
       ctx.lineWidth = 1;
       ctx.stroke();
 
@@ -85,12 +89,12 @@ export default function PixelCanvas({
           ctx.moveTo(0, point);
           ctx.lineTo(display, point);
         }
-        ctx.strokeStyle = "rgba(103, 245, 177, 0.2)";
+        ctx.strokeStyle = shades.major;
         ctx.lineWidth = 1;
         ctx.stroke();
       }
     }
-  }, [size, pixels, zoom]);
+  }, [size, pixels, zoom, theme]);
 
   // Live shape preview (line / rectangle).
   useEffect(() => {

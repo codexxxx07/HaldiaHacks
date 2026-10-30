@@ -10,6 +10,7 @@ export default function CanvasStage({
   color,
   brushSize,
   mirror,
+  theme,
   onLive,
   onHistory,
   onPickColor,
@@ -26,9 +27,15 @@ export default function CanvasStage({
           <span className="chip text-slate-400">
             {size} × {size}
           </span>
-          <span className="chip hidden text-cyan/80 sm:inline-flex">
-            {active.label}
-          </span>
+          <button
+            type="button"
+            className="btn btn-sm py-1.5"
+            onClick={onFit}
+            title="Fit canvas to screen (0)"
+          >
+            <Icon name="fit" className="h-3 w-3" />
+            Fit
+          </button>
         </div>
       </div>
 
@@ -42,6 +49,7 @@ export default function CanvasStage({
             color={color}
             brushSize={brushSize}
             mirror={mirror}
+            theme={theme}
             onLive={onLive}
             onHistory={onHistory}
             onPickColor={onPickColor}
@@ -73,7 +81,7 @@ export default function CanvasStage({
             className="min-w-[54px] text-center font-pixel text-[9px] tracking-[0.08em] text-mint"
             aria-live="polite"
           >
-            ×{zoom}
+            {zoom}%
           </span>
           <button
             type="button"
@@ -84,15 +92,6 @@ export default function CanvasStage({
             aria-label="Zoom in"
           >
             <Icon name="plus" className="h-3 w-3" />
-          </button>
-          <button
-            type="button"
-            className="btn btn-sm ml-1 py-1.5"
-            onClick={onFit}
-            title="Fit canvas to screen (0)"
-          >
-            <Icon name="fit" className="h-3 w-3" />
-            Fit
           </button>
         </div>
       </div>

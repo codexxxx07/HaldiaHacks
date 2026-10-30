@@ -6,6 +6,7 @@ const KEYS = {
   session: `${NAMESPACE}:session:v1`,
   gallery: `${NAMESPACE}:gallery:v1`,
   palette: `${NAMESPACE}:palette:v1`,
+  theme: `${NAMESPACE}:theme:v1`,
 };
 
 function readValue(key) {
@@ -52,6 +53,16 @@ export function saveSession({ name, size, pixels }) {
     art: encodeArt(size, pixels),
     updatedAt: Date.now(),
   }).ok;
+}
+
+/** Returns the saved theme ("dark" | "light"), or null when unset. */
+export function loadTheme() {
+  const stored = readValue(KEYS.theme);
+  return stored === "light" || stored === "dark" ? stored : null;
+}
+
+export function saveTheme(theme) {
+  return writeValue(KEYS.theme, theme).ok;
 }
 
 export function loadPalette() {

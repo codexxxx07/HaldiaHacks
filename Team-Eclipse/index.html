@@ -10,6 +10,18 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./dist/styles.css">
+  <script>
+    // Apply the saved theme before paint so there is no flash of the wrong theme.
+    (function () {
+      try {
+        if (JSON.parse(localStorage.getItem("pixel-forge:theme:v1")) === "light") {
+          document.documentElement.dataset.theme = "light";
+        }
+      } catch (error) {
+        /* Ignore storage access issues and keep the dark default. */
+      }
+    })();
+  </script>
 </head>
 <body>
   <div id="app"></div>

@@ -10,6 +10,8 @@ export default function Header({
   onShare,
   onExport,
   exporting,
+  theme,
+  onToggleTheme,
 }) {
   return (
     <header className="relative z-30 flex shrink-0 flex-wrap items-center gap-3 border-b border-line bg-deep/90 px-3 py-3 backdrop-blur sm:px-5">
@@ -42,6 +44,19 @@ export default function Header({
       </div>
 
       <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+        <button
+          type="button"
+          className="icon-btn"
+          onClick={onToggleTheme}
+          title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+          aria-label={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+          aria-pressed={theme === "light"}
+        >
+          <Icon name={theme === "light" ? "moon" : "sun"} />
+        </button>
+
+        <span className="hidden h-6 w-px bg-line sm:block" aria-hidden="true" />
+
         <div className="flex items-center gap-1" role="group" aria-label="History">
           <button
             type="button"

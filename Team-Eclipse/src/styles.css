@@ -259,3 +259,113 @@
 .animate-toast {
   animation: toast-in 140ms steps(3, end) both;
 }
+
+/* ---- Light theme ------------------------------------------------------- */
+/* Kept unlayered so these win over Tailwind's layered utilities/components. */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --color-ink: #eef1f7;
+  --color-deep: #e3e9f2;
+  --color-panel: #ffffff;
+  --color-panel-2: #e9eef6;
+  --color-line: #d5dded;
+  --color-line-2: #a9b7cf;
+
+  --color-mint: #0e8f63;
+  --color-cyan: #0d7fbf;
+  --color-amber: #a8690f;
+  --color-rose: #d12e5b;
+  --color-violet: #6242d8;
+
+  --color-slate-100: #0d1526;
+  --color-slate-200: #1b2537;
+  --color-slate-300: #2f3b52;
+  --color-slate-400: #46536b;
+  --color-slate-500: #64748b;
+  --color-slate-600: #93a1b6;
+}
+
+:root[data-theme="light"] body {
+  background-image:
+    radial-gradient(ellipse 70% 55% at 10% 0%, rgba(14, 143, 99, 0.1), transparent 60%),
+    radial-gradient(ellipse 70% 60% at 95% 100%, rgba(13, 127, 191, 0.1), transparent 55%),
+    repeating-linear-gradient(0deg, transparent 0 2px, rgba(15, 23, 42, 0.02) 2px 3px);
+}
+
+:root[data-theme="light"] * {
+  scrollbar-color: #a9b7cf transparent;
+}
+
+:root[data-theme="light"] ::-webkit-scrollbar-track {
+  background: #eef1f7;
+}
+
+:root[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: #c1cce0;
+  border-color: #eef1f7;
+}
+
+:root[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: #a9b7cf;
+}
+
+:root[data-theme="light"] :focus-visible {
+  outline-color: #0e8f63;
+}
+
+:root[data-theme="light"] .btn-accent:hover:not(:disabled) {
+  border-color: #0b7a54;
+  background: #0b7a54;
+}
+
+:root[data-theme="light"] .stage {
+  background-color: #eef2f8;
+  background-image:
+    radial-gradient(circle at 50% 45%, rgba(53, 65, 94, 0.1), transparent 65%),
+    linear-gradient(rgba(53, 65, 94, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(53, 65, 94, 0.12) 1px, transparent 1px);
+}
+
+:root[data-theme="light"] .checker {
+  background-color: #e7ecf4;
+  background-image:
+    linear-gradient(45deg, #d2dbea 25%, transparent 25%),
+    linear-gradient(-45deg, #d2dbea 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #d2dbea 75%),
+    linear-gradient(-45deg, transparent 75%, #d2dbea 75%);
+}
+
+:root[data-theme="light"] .brush-slider::-webkit-slider-runnable-track {
+  border-color: #a9b7cf;
+  background: #dfe6f1;
+}
+
+:root[data-theme="light"] .brush-slider::-moz-range-track {
+  border-color: #a9b7cf;
+  background: #dfe6f1;
+}
+
+:root[data-theme="light"] .brush-slider::-webkit-slider-thumb {
+  border-color: #0e8f63;
+  background: #0e8f63;
+}
+
+:root[data-theme="light"] .brush-slider::-moz-range-thumb {
+  border-color: #0e8f63;
+  background: #0e8f63;
+}
+
+/* Smooth cross-fade whenever the theme (or a colour) changes. */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    transition:
+      background-color 260ms ease,
+      border-color 260ms ease,
+      color 260ms ease,
+      fill 260ms ease,
+      outline-color 260ms ease;
+  }
+}
