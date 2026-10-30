@@ -4,19 +4,19 @@
 
 Hack Day Haldia x GRID community - 6-hour build challenge
 
-**Repo:** `team-eclipse` | **Stack:** HTML + vanilla JavaScript | **Difficulty:** Hard | **Time:** 6 hours
+**Repo:** `team-eclipse` | **Stack:** HTML + CSS (Tailwind CSS CLI) + React.js | **Difficulty:** Hard | **Time:** 6 hours
 
 ## Brief
 Pixel art needs fast, forgiving tools. Build an editor with proper undo, fill and export.
 
 ## Core tasks (must-do)
-- [ ] Canvas grid with selectable size (16 / 32 / 64) and zoom
-- [ ] Tools: pencil, eraser, flood fill, colour picker, line and rectangle
-- [ ] Editable palette
-- [ ] Undo / redo
-- [ ] Export the artwork as a scaled PNG
-- [ ] Gallery of saved drawings in localStorage (save, reopen, delete)
-- [ ] Works with touch as well as mouse
+- [x] Canvas grid with selectable size (16 / 32 / 64) and zoom
+- [x] Tools: pencil, eraser, flood fill, colour picker, line and rectangle
+- [x] Editable palette
+- [x] Undo / redo
+- [x] Export the artwork as a scaled PNG
+- [x] Gallery of saved drawings in localStorage (save, reopen, delete)
+- [x] Works with touch as well as mouse
 
 ## Bonus tasks (only after the core works)
 - [ ] Shareable link (encode the art in the URL hash)
@@ -24,18 +24,21 @@ Pixel art needs fast, forgiving tools. Build an editor with proper undo, fill an
 - [ ] Mirror / symmetry drawing mode
 - [ ] Import an image and pixelate it
 
-## What is already here
-- `index.html` - base page
-- `script.js` - state, `save()` / `load()` (localStorage), `render()` and TODO function stubs
-- `package.json` - `npm start` serves this folder
+## Project structure
+- `index.html` - app shell that loads the built bundle and stylesheet
+- `src/` - React source: `App.jsx`, UI components and pure pixel helpers
+- `src/styles.css` - Tailwind entry with the Retro Pixel Studio theme
+- `package.json` - `npm start` builds the assets and serves this folder
+- `dist/` - generated CSS/JS bundle (run `npm run build` after changes)
 
 ## Run locally
 ```bash
-npm start   # or simply open index.html in your browser
+npm install
+npm start   # builds Tailwind + React, then serves http://localhost:3000
 ```
 
 ## Deploy
-Any static host works (for example GitHub Pages, Netlify or Vercel). There is no build step.
+Run `npm run build`, then publish this folder (or the generated `dist/` alongside `index.html`) to any static host such as GitHub Pages, Netlify or Vercel.
 
 ## Suggested pacing
 - Hour 1: read this README, agree on a plan and split the work

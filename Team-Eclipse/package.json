@@ -4,6 +4,20 @@
   "private": true,
   "description": "Pixel Art Editor - Hack Day Haldia x GRID community starter",
   "scripts": {
-    "start": "npx --yes serve ."
+    "build:css": "tailwindcss -i ./src/styles.css -o ./dist/styles.css --minify",
+    "build:js": "esbuild src/main.jsx --bundle --minify --format=iife --jsx=automatic --define:process.env.NODE_ENV='\"production\"' --outfile=dist/app.js",
+    "build": "npm run build:css && npm run build:js",
+    "start": "npm run build && serve . -l 3000",
+    "dev": "npm run build && node scripts/serve-dev.js"
+  },
+  "dependencies": {
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "esbuild": "^0.28.2",
+    "serve": "^10.0.2",
+    "tailwindcss": "^4.3.3"
   }
 }
