@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "cd Team-Eclipse && npm install",
+  "buildCommand": "cd Team-Eclipse && npm run build",
+  "outputDirectory": "Team-Eclipse/dist"
+}
